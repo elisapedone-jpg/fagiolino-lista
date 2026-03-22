@@ -232,10 +232,10 @@ function renderContribModal(){
   }else if(state.step===1){
     body=`
       <label class="field-label">Il tuo nome</label>
-      <input class="field-input" id="cName" value="${esc(state.name)}" placeholder="es. Marco" oninput="state.name=this.value;updateBtn()">
+      <input class="field-input" id="cName" placeholder="es. Marco">
       <label class="field-label">Quanto vuoi contribuire (£)</label>
-      <input class="field-input" id="cAmount" value="${esc(state.amount)}" placeholder="Max ${fmt(maxLeft)}" inputmode="decimal" oninput="state.amount=this.value.replace(/[^0-9.]/g,'');this.value=state.amount;updateBtn()">
-      <button class="btn-primary" onclick="goStep2()">Avanti →</button>`;
+      <input class="field-input" id="cAmount" placeholder="Max ${fmt(maxLeft)}" inputmode="decimal">
+      <button class="btn-primary" id="btnNext" onclick="goStep2()">Avanti →</button>`;
   }else{
     const causale=`Lista Baby - ${g.name} - ${state.name||"tuo nome"}`;
     body=`
@@ -274,7 +274,7 @@ function renderAdminModal(){
   if(!state.adminAuth){
     body=`
       <label class="field-label">Password</label>
-      <input class="field-input ${state.pwdError?'error':''}" type="password" id="adminPwd" value="${esc(state.pwdInput)}" placeholder="Inserisci password" oninput="state.pwdInput=this.value;state.pwdError=false" onkeydown="if(event.key==='Enter')tryLogin()">
+      <input class="field-input ${state.pwdError?'error':''}" type="password" id="adminPwd" placeholder="Inserisci password" onkeydown="if(event.key==='Enter')tryLogin()">
       ${state.pwdError?'<p class="error-text">Password errata</p>':''}
       <button class="btn-primary" style="margin-top:8px" onclick="tryLogin()">Accedi</button>`;
   }else{
@@ -322,15 +322,13 @@ window.openContrib=id=>{state.modal=id;state.step=1;state.name="";state.amount="
 window.closeContrib=()=>{state.modal=null;render()};
 window.goStep1=()=>{state.step=1;render()};
 window.goStep2=()=>{
-  state.name=document.getElementById("cName")?.value||state.name;
-  state.amount=(document.getElementById("cAmount")?.value||state.amount).replace(/[^0-9.]/g,"");
-  if(state.name.trim()&&state.amount&&Number(state.amount)>0){state.step=2;render()}
+  const n=(document.getElementById("cName")||{}).value||"";
+  const a=((document.getElementById("cAmount")||{}).value||"").replace(/[^0-9.]/g,"");
+  if(!n.trim()){document.getElementById("cName").style.borderColor="#d9534f";return}
+  if(!a||Number(a)<=0){document.getElementById("cAmount").style.borderColor="#d9534f";return}
+  state.name=n;state.amount=a;state.step=2;render();
 };
-window.updateBtn=()=>{
-  const b=document.querySelector(".btn-primary");if(!b)return;
-  const ok=state.name.trim()&&state.amount&&Number(state.amount)>0;
-  b.disabled=!ok;
-};
+window.updateBtn=()=>{};
 window.confirmContrib=()=>{
   const g=gifts.find(x=>x.id===state.modal);if(!g)return;
   const a=Number(state.amount);if(!state.name.trim()||!a||a<=0)return;
@@ -346,7 +344,7 @@ window.copyCausale=async()=>{
 };
 window.openAdmin=()=>{state.adminOpen=true;state.adminAuth=false;state.pwdInput="";state.pwdError=false;state.confirmDelete=null;state.newGift={name:"",price:"",link:""};render()};
 window.closeAdmin=()=>{state.adminOpen=false;render()};
-window.tryLogin=()=>{if(state.pwdInput===ADMIN_PWD){state.adminAuth=true;state.pwdError=false}else state.pwdError=true;render()};
+window.tryLogin=()=>{const v=(document.getElementById("adminPwd")||{}).value||"";if(v===ADMIN_PWD){state.adminAuth=true;state.pwdError=false}else{state.pwdError=true}render()};
 window.resetContrib=id=>{delete contribs[id];saveContribs();render()};
 window.confirmDeleteGift=id=>{state.confirmDelete=id;render()};
 window.cancelDelete=()=>{state.confirmDelete=null;render()};
